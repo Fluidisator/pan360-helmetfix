@@ -54,6 +54,7 @@ Press the main **M5** button to cycle through the following screens:
 4. Ensure the M5Stick shows pitch, roll, and yaw values.
 5. On **Screen 4**, press the right side button to start recording.
 6. Show **Screen 2** (recording ID) in front of the camera for later synchronization.
+![record id](/doc/record_id.png "Record ID")
 7. When done, press the right side button again on **Screen 4** to stop recording.
 
 ---
