@@ -66,5 +66,33 @@ Press the main **M5** button to cycle through the following screens:
    ```bash
    git clone git@github.com:qhess34/pan360-helmetfix.git
 
+2. Clone the Img360 Transformer repository:
+   ```bash
+   git clone git@github.com:Starmania/img360.git
 
+3. Follow the installation guide at: https://github.com/Starmania/img360/tree/master
 
+4. Copy the transformer library to the scripts/ directory:
+   ```bash
+   cp -r img360/img360_transformer/ pan360-helmetfix/scripts/.
+
+## Fixing the Images
+
+1. Copy your 360° photos to a local folder.
+
+2. Retrieve the M5Stick CSV data:
+*  Enable Wi-Fi (via Screen 3).
+* Find the IP address on Screen 1.
+*  Open http://<device_ip>/ in your browser to download the CSV file.
+
+3. Identify the image where the recording ID is clearly visible.
+
+4. Run the correction script:
+   ```bash
+   ./correct_angles.py \
+     --photodir=PATH_TO_PHOTOS \
+     --recordfile=CSV_FILE_FROM_M5STICK \
+     --photoref=FILENAME_WITH_ID \
+     --indexref=RECORDING_ID \
+     --outputcsv=output.csv
+   
