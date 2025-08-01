@@ -1,17 +1,70 @@
-# Target
+# 🎯 Project Goal
 
-This projet aims to help people who take 360° pictures from a moving point (helmet, backpack, ...) to fix the level (roll, pitch) of the pictures.
+This project helps users who capture 360° photos from a moving setup (e.g., helmet, backpack...) to correct the horizon level (roll and pitch) of their pictures.
 
-# Hardware requirements
+---
 
-* 360° camera with possibility of taking pictures on a specific interval : this script was done with a GoPro Max 
-* WT9011DCL BT50 IMU Sensor https://witmotion-sensor.com/products/wt9011dcl-bluetooth5-0-compact-size-accelerometer-inclinometer-sensor
-* M5StickC Plus ESP32 https://shop.m5stack.com/products/m5stickc-plus2-esp32-mini-iot-development-kit
+# 🔧 Hardware Requirements
 
-# Mounting
+## Required Devices
 
-Attach the Witmotion sensor on the helmet, idaelly close to the camera.
+- A 360° camera capable of taking pictures at regular intervals. *(This project was developed using a GoPro Max.)*
+- [WT9011DCL BT50 IMU Sensor](https://witmotion-sensor.com/products/wt9011dcl-bluetooth5-0-compact-size-accelerometer-inclinometer-sensor)
+- [M5StickC Plus2 ESP32](https://shop.m5stack.com/products/m5stickc-plus2-esp32-mini-iot-development-kit)
 
-![mounting](/doc/mounting.png "Mouting")
+## Sensor Mounting
 
-![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
+Mount the Witmotion sensor on your helmet, ideally as close to the 360° camera as possible. The sensor should be aligned on the same axis as the camera.
+
+![Mounting Example](/doc/mounting.png "Mounting")
+
+---
+
+# 🔌 M5StickC Plus2 Firmware
+
+The firmware source code is located in the `m5stickcplus2_fw/` directory.
+
+### Installation Steps
+
+1. Install the Arduino IDE following the [official M5Stack instructions](https://docs.m5stack.com/en/arduino/m5stickc_plus2/program).
+2. Edit the configuration variables (Wi-Fi credentials and Witmotion MAC address).
+3. Upload the firmware to the M5Stick.
+4. Press the left side button to power on the device.
+
+### M5StickC User Interface
+
+Press the main **M5** button to cycle through the following screens:
+
+1. **Device Status** – Sensor and Wi-Fi information
+2. **Recording ID** – Displayed when recording is active
+3. **Wi-Fi Control** – Press the right side button to enable
+4. **Start/Stop Recording** – Press the right side button to toggle
+5. **Filesystem Info** – Press the right side button to format
+6. **Screensaver** – Blank screen to save battery
+
+---
+
+# ▶️ How To Use
+
+## Starting a Recording
+
+1. Power on the **M5Stick**.
+2. Power on the **Witmotion sensor**.
+3. Power on your **360° camera**.
+4. Ensure the M5Stick shows pitch, roll, and yaw values.
+5. On **Screen 4**, press the right side button to start recording.
+6. Show **Screen 2** (recording ID) in front of the camera for later synchronization.
+7. When done, press the right side button again on **Screen 4** to stop recording.
+
+---
+
+# 🛠️ 360° Image Correction
+
+## Initial Setup
+
+1. Clone this repository:
+   ```bash
+   git clone git@github.com:qhess34/pan360-helmetfix.git
+
+
+
