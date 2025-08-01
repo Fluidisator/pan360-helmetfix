@@ -11,3 +11,7 @@ This projet aims to help people who take 360° pictures from a moving point (hel
 # Mounting
 
 Attach the Witmotion sensor on the helmet, idaelly close to the camera.
+
+![mounting](/doc/mounting.png "Mouting")
+
+![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
