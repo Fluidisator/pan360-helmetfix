@@ -16,7 +16,7 @@ This project helps users who capture 360° photos from a moving setup (e.g., hel
 
 Mount the Witmotion sensor on your helmet, ideally as close to the 360° camera as possible. The sensor should be aligned on the same axis as the camera.
 
-![Mounting Example](/doc/mounting.png "Mounting")
+![Mounting Example on helmet](/doc/mounting.png "Mounting on helmet")
 
 ---
 
