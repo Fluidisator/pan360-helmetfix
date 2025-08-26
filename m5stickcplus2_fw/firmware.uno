@@ -9,19 +9,19 @@
 //reseau actif
 int numwifi = 0;
 // nombre de réseau
-int nbwifi = 2; //ugly
+int nbwifi = 2;
 //Delay between short and long press
 bool btnbactivate = true;
 // Wifi SSID
-const char* ssid[2] = {"SSID1","SSID2"}; // need to manualy modify de number of ssid to match nbwifi
+const char* ssid[2] = {"SSID1","SSID2"};
 // Wifi Password
-const char* password[2] = {"PASSWORD1","PASSWORD2"};  // need to manualy modify de number of password  to match nbwifi
+const char* password[2] = {"Password1","Password2"};
 char NumDate [21];
 bool boolsyncNTP = false;
 
 // Witmotion sensor 
 // Witmotion WT9011DCL-BT5 Mac Address
-static const char* macStr = "xx:xx:xx:xx:xx:xx";
+static const char* macStr = "01:23:45:67:89:ab";
 // Witmotion WT9011DCL-BT5 serviceUUID 
 static BLEUUID serviceUUID("0000ffe5-0000-1000-8000-00805f9a34fb");
 // WitMotion WT9011DCL-BT5 characteristic UUID
@@ -290,6 +290,7 @@ void setup() {
   pBLEScan->setWindow(449);
   pBLEScan->setActiveScan(true);
   pBLEScan->start(5, false); // Scan 5 secondes sans blocage
+
   M5.Lcd.fillScreen(BLACK);
   
   if (!StickCP2.Rtc.isEnabled()) {
@@ -313,10 +314,12 @@ void loop() {
   accelx = data.accel.x;
   accely = data.accel.y;
   accelz = data.accel.z;
-  accelroll = data.gyro.x;
-  accelyaw = data.gyro.y;
-  accelpitch = data.gyro.z;
+
+  roll = data.gyro.x;
+  yaw = data.gyro.y;
+  pitch = data.gyro.z;
 */
+
   StickCP2.update();
   if (StickCP2.BtnA.wasReleased()) {
     if(screen < 6) {
@@ -424,7 +427,7 @@ void loop() {
     if (StickCP2.BtnB.wasReleased()) {
       if(!recordstarted) {
         //String code = generateRandomCode();  // ex: "12-34-56-78"
-		sprintf(NumDate, "%04d%02d%02dT%02d%02d%02d",  dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds); //Files name frome datetime
+		sprintf(NumDate, "%04d%02d%02dT%02d%02d%02d",  dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds);
 		String code = NumDate;
         snprintf(filename, sizeof(filename), "/%s.csv", code.c_str());
 
@@ -492,7 +495,7 @@ void loop() {
       M5.Lcd.fillRect(0, 10, 10, 24, ORANGE);
       M5.Lcd.fillRect(60, 10, 190, 24, ORANGE);
       M5.Lcd.setTextColor(WHITE, ORANGE);
-      }
+    }
     }
   else if(!screencolored)  {
       M5.Lcd.fillRect(0, 0, 250, 10, RED);
@@ -506,7 +509,7 @@ void loop() {
 	M5.Lcd.println("RTC UTC :");
 	StickCP2.Display.printf("%04d/%02d/%02d\n", dt.date.year, dt.date.month, dt.date.date);
     StickCP2.Display.printf("%02d:%02d:%02d\n", dt.time.hours, dt.time.minutes,dt.time.seconds);
-	Serial.printf("RTC   UTC  :%04d/%02d/%02d %02d:%02d:%02d",
+	Serial.printf("RTC   UTC  :%04d/%02d/%02d %02d:%02d:%02d\n",
         dt.date.year, dt.date.month, dt.date.date,
         dt.time.hours, dt.time.minutes,dt.time.seconds);
   }
@@ -533,12 +536,12 @@ void loop() {
     lastBLEAttempt = millis();
     doScan = false;
   }
-  
+
   if(recordstarted) {
     if(millis() - lastRecord >= 100) {
       id++;
       lastRecord = millis();
-      logFile.printf("%lu,%d,%.2f,%.2f,%.2f\n", timems, id, roll, pitch, yaw);
+      logFile.printf("%04d/%02d/%02d %02d:%02d:%02d,%lu,%d,%.2f,%.2f,%.2f\n", dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds, timems, id, roll, pitch, yaw);
       if(id % 10 == 0) {
         logFile.flush();
       }
@@ -569,6 +572,7 @@ void loop() {
       Serial.println("Serveur HTTP lancé");
 
       wifienabled = 2;
+      //ici bouton C pour ntp
     }
   }
   else if(!wifienable && wifienabled != 0) {
