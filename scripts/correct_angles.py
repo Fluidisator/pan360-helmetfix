@@ -107,10 +107,10 @@ def main():
       row["roll_corrected"] = round(((-result['roll'] - args.roll_level_ref + 180) % 360) - 180)
       row["yaw_corrected"] = round(((-result['yaw'] - args.yaw_level_ref + 180) % 360) - 180)
   
-      if update_images == jpeg:
+      if update_images == "jpeg":
         print("process image" + photodir + '/' + row['photo'] + "roll:"+str(row["roll_corrected"])+",pitch:"+str(round(row["pitch_corrected"])))
         process_image(photodir + '/' + row['photo'], round(row["roll_corrected"]), round(row["pitch_corrected"]), 0)
-      elif update_images == metadatas:
+      elif update_images == "metadatas":
         print("update exifs for" + photodir + '/' + row['photo'] + "roll:"+str(row["roll_corrected"])+",pitch:"+str(round(row["pitch_corrected"])))
         subprocess.run([
           "exiftool",
