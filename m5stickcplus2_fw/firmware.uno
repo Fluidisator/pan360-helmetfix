@@ -541,7 +541,7 @@ void loop() {
     if(millis() - lastRecord >= 100) {
       id++;
       lastRecord = millis();
-      logFile.printf("%04d/%02d/%02d %02d:%02d:%02d,%lu,%d,%.2f,%.2f,%.2f\n", dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds, timems, id, roll, pitch, yaw);
+      logFile.printf("%lu,%d,%.2f,%.2f,%.2f\n", timems, id, roll, pitch, yaw);
       if(id % 10 == 0) {
         logFile.flush();
       }
