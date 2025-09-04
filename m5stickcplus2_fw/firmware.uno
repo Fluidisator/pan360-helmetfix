@@ -6,14 +6,22 @@
 
 // Configuration vars
 /* WiFi */
+//reseau actif
+int numwifi = 0;
+// nombre de réseau
+int nbwifi = 2;
+//Delay between short and long press
+bool btnbactivate = true;
 // Wifi SSID
-const char* ssid = "WIFI_SSID";
+const char* ssid[2] = {"SSID1","SSID2"};
 // Wifi Password
-const char* password = "WIFI_PASSWORD";
+const char* password[2] = {"Password1","Password2"};
+char NumDate [21];
+bool boolsyncNTP = false;
 
-/* Witmotion sensor */
+// Witmotion sensor 
 // Witmotion WT9011DCL-BT5 Mac Address
-static const char* macStr = "xx:xx:xx:xx:xx:xx";
+static const char* macStr = "01:23:45:67:89:ab";
 // Witmotion WT9011DCL-BT5 serviceUUID 
 static BLEUUID serviceUUID("0000ffe5-0000-1000-8000-00805f9a34fb");
 // WitMotion WT9011DCL-BT5 characteristic UUID
@@ -40,7 +48,10 @@ int id = 0;
 float roll = 0;
 float pitch = 0;
 float yaw = 0;
-char filename[17];
+float accelx = 0;
+float accely = 0;
+float accelz = 0;
+char filename[21];
 
 WebServer server(80);
 
@@ -49,6 +60,27 @@ unsigned long timems;
 unsigned long lastRecord = millis();
 unsigned long lastWifiAttempt = millis();
 unsigned long lastBLEAttempt = millis();
+
+//NTP config
+//From M5StickC plus 2 RTC example
+#define NTP_TIMEZONE  "UTC+2"
+#define NTP_SERVER1   "ntp.midway.ovh"
+#define NTP_SERVER2   "ntp.unice.fr"
+#define NTP_SERVER3   "delphi.phys.univ-tours.fr"
+
+// Different versions of the framework have different SNTP header file names and
+// availability.
+#if __has_include(<esp_sntp.h>)
+#include <esp_sntp.h>
+#define SNTP_ENABLED 1
+#elif __has_include(<sntp.h>)
+#include <sntp.h>
+#define SNTP_ENABLED 1
+#endif
+
+#ifndef SNTP_ENABLED
+#define SNTP_ENABLED 0
+#endif
 
 void handleRoot() {
   String html = "<h1>Fichiers SPIFFS</h1><ul>";
@@ -200,6 +232,30 @@ String generateRandomCode() {
          randomNumericBlock(2);
 }
 
+//Synchronize RTC 
+//From M5StickC plus 2 RTC example
+void SyncNTP(){	
+	configTzTime(NTP_TIMEZONE, NTP_SERVER1, NTP_SERVER2, NTP_SERVER3);
+
+#if SNTP_ENABLED
+    while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED) {
+        Serial.print('.');
+        delay(1000);
+    }
+#else
+    delay(1600);
+    struct tm timeInfo;
+    while (!getLocalTime(&timeInfo, 1000)) {
+        Serial.print('.');
+    };
+#endif
+
+    Serial.println("\r\n NTP Connected.");
+
+    time_t t = time(nullptr) + 1;  // Advance one second.
+    while (t > time(nullptr));  /// Synchronization in seconds
+    StickCP2.Rtc.setDateTime(gmtime(&t));
+}
 
 void setup() {
   M5.begin();
@@ -236,14 +292,37 @@ void setup() {
   pBLEScan->start(5, false); // Scan 5 secondes sans blocage
 
   M5.Lcd.fillScreen(BLACK);
+  
+  if (!StickCP2.Rtc.isEnabled()) {
+    Serial.println("RTC not found.");
+    for (;;) {
+      vTaskDelay(500);
+    }
+  }
+  Serial.println("RTC found.");
+  
 }  // End of setup.
 
 void loop() {
   timems = millis() / 100;
   
+  auto dt = StickCP2.Rtc.getDateTime();
+/*
+// internal IMU
+  auto imu_update = StickCP2.Imu.update();
+  auto data = StickCP2.Imu.getImuData();
+  accelx = data.accel.x;
+  accely = data.accel.y;
+  accelz = data.accel.z;
+
+  roll = data.gyro.x;
+  yaw = data.gyro.y;
+  pitch = data.gyro.z;
+*/
+
   StickCP2.update();
   if (StickCP2.BtnA.wasReleased()) {
-    if(screen < 5) {
+    if(screen < 6) {
       lcdon();
       screen++ ;
       screencolored = false;
@@ -297,8 +376,21 @@ void loop() {
        M5.Lcd.fillScreen(RED);
        screencolored = true;      
     }
+    
+    //si le bouton est pressé plus d'une seconde, change la config wifi et inhibe le bouton pour 1s
+    if (StickCP2.BtnB.pressedFor(1000)) {
+      if(wifienable) {
+        wifienable = false;
+      }
+      numwifi = numwifi + 1;
+      numwifi = numwifi % nbwifi;
+      btnbactivate = false;
+      M5.Lcd.fillScreen(GOLD);
+      delay(1000); // pour un seul incrément
+      M5.Lcd.fillScreen(RED);
+    }
 
-    if (StickCP2.BtnB.wasReleased()) {
+    if (StickCP2.BtnB.wasReleased() && btnbactivate) {
       if(!wifienable) {
         wifienable = true;
       }
@@ -307,8 +399,14 @@ void loop() {
       }
       screencolored = false;
     }
+
+    if (StickCP2.BtnB.releasedFor(1000)) {
+      btnbactivate = true;
+    }
     M5.Lcd.setTextColor(WHITE);
     M5.Lcd.println("WiFi");
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.println(ssid[numwifi]);
     
   }
   else if(screen == 4) {
@@ -328,7 +426,9 @@ void loop() {
     
     if (StickCP2.BtnB.wasReleased()) {
       if(!recordstarted) {
-        String code = generateRandomCode();  // ex: "12-34-56-78"
+        //String code = generateRandomCode();  // ex: "12-34-56-78"
+		sprintf(NumDate, "%04d%02d%02dT%02d%02d%02d",  dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds);
+		String code = NumDate;
         snprintf(filename, sizeof(filename), "/%s.csv", code.c_str());
 
         Serial.printf("Fichier : %s\n", filename);
@@ -376,6 +476,43 @@ void loop() {
       SPIFFS.format();
     }
   }
+  else if(screen == 6) {
+    M5.Lcd.setCursor(10, 10);
+	if(wifienabled == 2){
+	  if (StickCP2.BtnB.wasReleased()) {
+	      SyncNTP();
+        M5.Lcd.setTextColor(BLACK, GREEN);
+        boolsyncNTP = true;
+	    }
+    else if(boolsyncNTP){
+      M5.Lcd.fillRect(0, 0, 250, 10, GREEN);
+      M5.Lcd.fillRect(0, 10, 10, 24, GREEN);
+      M5.Lcd.fillRect(60, 10, 190, 24, GREEN);
+      M5.Lcd.setTextColor(BLACK, GREEN);
+      }
+    else{
+      M5.Lcd.fillRect(0, 0, 250, 10, ORANGE);
+      M5.Lcd.fillRect(0, 10, 10, 24, ORANGE);
+      M5.Lcd.fillRect(60, 10, 190, 24, ORANGE);
+      M5.Lcd.setTextColor(WHITE, ORANGE);
+    }
+    }
+  else if(!screencolored)  {
+      M5.Lcd.fillRect(0, 0, 250, 10, RED);
+      M5.Lcd.fillRect(0, 10, 10, 24, RED);
+      M5.Lcd.fillRect(60, 10, 190, 24, RED);
+      M5.Lcd.setTextColor(WHITE, RED);     
+    }
+	M5.Lcd.setTextSize(3);
+	M5.Lcd.println("NTP");
+	M5.Lcd.setTextColor(WHITE, BLACK);
+	M5.Lcd.println("RTC UTC :");
+	StickCP2.Display.printf("%04d/%02d/%02d\n", dt.date.year, dt.date.month, dt.date.date);
+    StickCP2.Display.printf("%02d:%02d:%02d\n", dt.time.hours, dt.time.minutes,dt.time.seconds);
+	Serial.printf("RTC   UTC  :%04d/%02d/%02d %02d:%02d:%02d\n",
+        dt.date.year, dt.date.month, dt.date.date,
+        dt.time.hours, dt.time.minutes,dt.time.seconds);
+  }
 
   if (doConnect == true) {
     if (connectToServer()) {
@@ -399,7 +536,7 @@ void loop() {
     lastBLEAttempt = millis();
     doScan = false;
   }
-  
+
   if(recordstarted) {
     if(millis() - lastRecord >= 100) {
       id++;
@@ -415,7 +552,7 @@ void loop() {
   if(wifienable && wifienabled == 0) {
     wifienabled = 1;     
     WiFi.mode(WIFI_STA);
-    WiFi.begin(ssid, password);
+    WiFi.begin(ssid[numwifi], password[numwifi]);
     Serial.print("Connexion Wi-Fi");
   }
   else if(wifienabled == 1 && millis() - lastWifiAttempt >= 500) {
@@ -435,6 +572,7 @@ void loop() {
       Serial.println("Serveur HTTP lancé");
 
       wifienabled = 2;
+      //ici bouton C pour ntp
     }
   }
   else if(!wifienable && wifienabled != 0) {
