@@ -118,10 +118,10 @@ void handleDownload() {
 
 static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify) {   
   if(pData[1] == 97) {
-    int rollL = pData[14];
-    int rollH = pData[15];
-    int pitchL = pData[16];
-    int pitchH = pData[17];
+    int rollL = pData[16];
+    int rollH = pData[17];
+    int pitchL = pData[14];
+    int pitchH = pData[15];
     int yawL = pData[18];
     int yawH = pData[19];
 
@@ -234,8 +234,8 @@ String generateRandomCode() {
 
 //Synchronize RTC 
 //From M5StickC plus 2 RTC example
-void SyncNTP(){	
-	configTzTime(NTP_TIMEZONE, NTP_SERVER1, NTP_SERVER2, NTP_SERVER3);
+void SyncNTP(){  
+  configTzTime(NTP_TIMEZONE, NTP_SERVER1, NTP_SERVER2, NTP_SERVER3);
 
 #if SNTP_ENABLED
     while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED) {
@@ -427,8 +427,8 @@ void loop() {
     if (StickCP2.BtnB.wasReleased()) {
       if(!recordstarted) {
         //String code = generateRandomCode();  // ex: "12-34-56-78"
-		sprintf(NumDate, "%04d%02d%02dT%02d%02d%02d",  dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds);
-		String code = NumDate;
+  sprintf(NumDate, "%04d%02d%02dT%02d%02d%02d",  dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds);
+  String code = NumDate;
         snprintf(filename, sizeof(filename), "/%s.csv", code.c_str());
 
         Serial.printf("Fichier : %s\n", filename);
@@ -478,42 +478,42 @@ void loop() {
   }
   else if(screen == 6) {
     M5.Lcd.setCursor(10, 10);
-	if(wifienabled == 2){
-	  if (StickCP2.BtnB.wasReleased()) {
-	      SyncNTP();
+    if(wifienabled == 2){
+      if (StickCP2.BtnB.wasReleased()) {
+        SyncNTP();
         M5.Lcd.setTextColor(BLACK, GREEN);
         boolsyncNTP = true;
-	    }
-    else if(boolsyncNTP){
-      M5.Lcd.fillRect(0, 0, 250, 10, GREEN);
-      M5.Lcd.fillRect(0, 10, 10, 24, GREEN);
-      M5.Lcd.fillRect(60, 10, 190, 24, GREEN);
-      M5.Lcd.setTextColor(BLACK, GREEN);
       }
-    else{
-      M5.Lcd.fillRect(0, 0, 250, 10, ORANGE);
-      M5.Lcd.fillRect(0, 10, 10, 24, ORANGE);
-      M5.Lcd.fillRect(60, 10, 190, 24, ORANGE);
-      M5.Lcd.setTextColor(WHITE, ORANGE);
+      else if(boolsyncNTP){
+        M5.Lcd.fillRect(0, 0, 250, 10, GREEN);
+        M5.Lcd.fillRect(0, 10, 10, 24, GREEN);
+        M5.Lcd.fillRect(60, 10, 190, 24, GREEN);
+        M5.Lcd.setTextColor(BLACK, GREEN);
+      }
+      else {
+        M5.Lcd.fillRect(0, 0, 250, 10, ORANGE);
+        M5.Lcd.fillRect(0, 10, 10, 24, ORANGE);
+        M5.Lcd.fillRect(60, 10, 190, 24, ORANGE);
+        M5.Lcd.setTextColor(WHITE, ORANGE);
+      }
     }
-    }
-  else if(!screencolored)  {
+    else if(!screencolored)  {
       M5.Lcd.fillRect(0, 0, 250, 10, RED);
       M5.Lcd.fillRect(0, 10, 10, 24, RED);
       M5.Lcd.fillRect(60, 10, 190, 24, RED);
       M5.Lcd.setTextColor(WHITE, RED);     
     }
-	M5.Lcd.setTextSize(3);
-	M5.Lcd.println("NTP");
-	M5.Lcd.setTextColor(WHITE, BLACK);
-	M5.Lcd.println("RTC UTC :");
-	StickCP2.Display.printf("%04d/%02d/%02d\n", dt.date.year, dt.date.month, dt.date.date);
+    M5.Lcd.setTextSize(3);
+    M5.Lcd.println("NTP");
+    M5.Lcd.setTextColor(WHITE, BLACK);
+    M5.Lcd.println("RTC UTC :");
+    StickCP2.Display.printf("%04d/%02d/%02d\n", dt.date.year, dt.date.month, dt.date.date);
     StickCP2.Display.printf("%02d:%02d:%02d\n", dt.time.hours, dt.time.minutes,dt.time.seconds);
-	Serial.printf("RTC   UTC  :%04d/%02d/%02d %02d:%02d:%02d\n",
-        dt.date.year, dt.date.month, dt.date.date,
-        dt.time.hours, dt.time.minutes,dt.time.seconds);
+    Serial.printf("RTC   UTC  :%04d/%02d/%02d %02d:%02d:%02d\n",
+    dt.date.year, dt.date.month, dt.date.date,
+    dt.time.hours, dt.time.minutes,dt.time.seconds);
   }
-
+  
   if (doConnect == true) {
     if (connectToServer()) {
       Serial.println("We are now connected to the BLE Server.");
@@ -541,7 +541,7 @@ void loop() {
     if(millis() - lastRecord >= 100) {
       id++;
       lastRecord = millis();
-      logFile.printf("%lu,%d,%.2f,%.2f,%.2f\n", timems, id, roll, pitch, yaw);
+      logFile.printf("%lu,%d,%.2f,%.2f,%.2f\n", timems, id, pitch, roll, yaw);
       if(id % 10 == 0) {
         logFile.flush();
       }

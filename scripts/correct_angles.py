@@ -7,7 +7,6 @@ from img360_transformer.batch_process import process_image
 import numpy as np
 import subprocess
 
-
 def sample_and_align_photos(
     measurements_csv,
     photodir,
@@ -15,6 +14,9 @@ def sample_and_align_photos(
     record_index_ref,
     step
 ):
+    # On prend l'enregistrement suivant pour palier à la latence
+    record_index_ref = record_index_ref + 1
+
     # 1. Charger le CSV
     df = pd.read_csv(measurements_csv)
     df.columns = ["time", "index", "pitch", "roll", "yaw"]
@@ -103,14 +105,13 @@ def main():
     csv = []
     for result in results:
       row = result
-      row["pitch_corrected"] = round(((-result['pitch'] - args.pitch_level_ref + 180) % 360) - 180)
-      row["roll_corrected"] = round(((-result['roll'] - args.roll_level_ref + 180) % 360) - 180)
-      row["yaw_corrected"] = round(((-result['yaw'] - args.yaw_level_ref + 180) % 360) - 180)
-  
-      if update_images == jpeg:
+      row["pitch_corrected"] = round(result['pitch'] - args.pitch_level_ref)
+      row["roll_corrected"]  = round(result['roll']  - args.roll_level_ref)
+
+      if update_images == "jpeg":
         print("process image" + photodir + '/' + row['photo'] + "roll:"+str(row["roll_corrected"])+",pitch:"+str(round(row["pitch_corrected"])))
         process_image(photodir + '/' + row['photo'], round(row["roll_corrected"]), round(row["pitch_corrected"]), 0)
-      elif update_images == metadatas:
+      elif update_images == "metadatas":
         print("update exifs for" + photodir + '/' + row['photo'] + "roll:"+str(row["roll_corrected"])+",pitch:"+str(round(row["pitch_corrected"])))
         subprocess.run([
           "exiftool",
