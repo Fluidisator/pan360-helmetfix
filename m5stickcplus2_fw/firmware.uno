@@ -45,12 +45,9 @@ int wifienabled = 0;
 boolean screencolored = false;
 boolean recordstarted = false;
 int id = 0;
-float roll = 0;
-float pitch = 0;
-float yaw = 0;
-float accelx = 0;
-float accely = 0;
-float accelz = 0;
+float witmotion_x = 0;
+float witmotion_y = 0;
+float witmotion_z = 0;
 char filename[21];
 
 WebServer server(80);
@@ -118,20 +115,21 @@ void handleDownload() {
 
 static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify) {   
   if(pData[1] == 97) {
-    int rollL = pData[16];
-    int rollH = pData[17];
-    int pitchL = pData[14];
-    int pitchH = pData[15];
-    int yawL = pData[18];
-    int yawH = pData[19];
+  
+    int rollL  = pData[14];
+    int rollH  = pData[15];
+    int pitchL = pData[16];
+    int pitchH = pData[17];
+    int yawL   = pData[18];
+    int yawH   = pData[19];
 
     int16_t rollRaw  = (int16_t)((rollH << 8) | rollL) ;
     int16_t pitchRaw = (int16_t)((pitchH << 8) | pitchL);
     int16_t yawRaw   = (int16_t)((yawH << 8) | yawL) ;
 
-    roll  = rollRaw / 32768.0 * 180.0;
-    pitch = pitchRaw / 32768.0 * 180.0;
-    yaw   = yawRaw / 32768.0 * 180.0;
+    witmotion_x = rollRaw / 32768.0 * 180.0;
+    witmotion_y = pitchRaw / 32768.0 * 180.0;
+    witmotion_z = yawRaw / 32768.0 * 180.0;
   }
 }
 
@@ -143,9 +141,9 @@ class MyClientCallback : public BLEClientCallbacks {
   void onDisconnect(BLEClient *pclient) {
     connected = false;
     Serial.println("onDisconnect");
-    roll = 0;
-    pitch = 0;
-    yaw = 0;
+    witmotion_x = 0;
+    witmotion_y = 0;
+    witmotion_z = 0;
   }
 };
 
@@ -307,18 +305,6 @@ void loop() {
   timems = millis() / 100;
   
   auto dt = StickCP2.Rtc.getDateTime();
-/*
-// internal IMU
-  auto imu_update = StickCP2.Imu.update();
-  auto data = StickCP2.Imu.getImuData();
-  accelx = data.accel.x;
-  accely = data.accel.y;
-  accelz = data.accel.z;
-
-  roll = data.gyro.x;
-  yaw = data.gyro.y;
-  pitch = data.gyro.z;
-*/
 
   StickCP2.update();
   if (StickCP2.BtnA.wasReleased()) {
@@ -347,10 +333,10 @@ void loop() {
     M5.Lcd.setTextColor(WHITE, BLACK);  // fond noir, efface proprement
     M5.Lcd.drawString("ID: " + String(id), x, y); y += lineHeight;
     M5.Lcd.drawString("T: " + String(timems) + "ms", x, y); y += lineHeight;
-    M5.Lcd.drawString("Roll: " + String(roll, 1) + "     ", x, y); y += lineHeight;
-    M5.Lcd.drawString("Pitch: " + String(pitch, 1) + "     ",x, y); y += lineHeight;
-    M5.Lcd.drawString("Yaw: " + String(yaw, 1) + "     ", x, y); y += lineHeight;
-    M5.Lcd.drawString("Bat: " + String(StickCP2.Power.getBatteryLevel()) + "%          ", x, y); y += lineHeight;
+    M5.Lcd.drawString("X: " + String(witmotion_x, 1) + "     ", x, y); y += lineHeight;
+    M5.Lcd.drawString("Y: " + String(witmotion_y, 1) + "     ",x, y); y += lineHeight;
+    M5.Lcd.drawString("Z: " + String(witmotion_z, 1) + "     ", x, y); y += lineHeight;
+    M5.Lcd.drawString("Bat: " + String(StickCP2.Power.getBatteryLevel()) + " %          ", x, y); y += lineHeight;
     M5.Lcd.drawString("IP: " + ip, x, y);
   }
   else if(screen == 2) {
@@ -463,13 +449,13 @@ void loop() {
     M5.Lcd.println("== Info SPIFFS ==");
     M5.Lcd.print("Total : ");  
     M5.Lcd.print(total);
-    M5.Lcd.println(" octets");
+    M5.Lcd.println(" octets      ");
     M5.Lcd.print("Used : ");
     M5.Lcd.print(used);
-    M5.Lcd.println(" octets");
+    M5.Lcd.println(" octets     ");
     M5.Lcd.print("Free : ");
     M5.Lcd.print(total - used);
-    M5.Lcd.println(" octets");
+    M5.Lcd.println(" octets      ");
     if (StickCP2.BtnB.wasReleased()) {
       Serial.println("Formatting SPIFFS...");
       M5.Lcd.println("Formatting SPIFFS...");
@@ -541,7 +527,7 @@ void loop() {
     if(millis() - lastRecord >= 100) {
       id++;
       lastRecord = millis();
-      logFile.printf("%lu,%d,%.2f,%.2f,%.2f\n", timems, id, pitch, roll, yaw);
+      logFile.printf("%lu,%d,%.2f,%.2f,%.2f\n", timems, id, witmotion_x, witmotion_y, witmotion_z);
       if(id % 10 == 0) {
         logFile.flush();
       }

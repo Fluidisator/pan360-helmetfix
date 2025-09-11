@@ -88,14 +88,41 @@ Press the main **M5** button to cycle through the following screens:
 * Find the IP address on Screen 1.
 *  Open http://<device_ip>/ in your browser to download the CSV file.
 
-3. Identify the image where the recording ID is clearly visible.
+3. Identify the image where the recording ID is clearly visible. Keep it memory for the **indexref** parameter, the filename will be the **photoref**
 
 4. Run the correction script:
    ```bash
    ./correct_angles.py \
-     --photodir=PATH_TO_PHOTOS \
-     --recordfile=CSV_FILE_FROM_M5STICK \
-     --photoref=FILENAME_WITH_ID \
-     --indexref=RECORDING_ID \
-     --outputcsv=output.csv
-   
+     --photodir PATH_TO_PHOTOS \
+     --recordfile CSV_FILE_FROM_M5STICK \
+     --photoref FILENAME_WITH_ID \
+     --indexref RECORDING_ID \
+     --outputcsv output.csv
+     --update_images metadatas
+   ```
+
+## 3D configuration settings
+
+As there are plenty of ways to install the camera and the IMU, it is necessary to specify some parameters
+
+### IMU Referencial (x,y,z)
+
+Here is the Witmotion WT9011DCL referencial (left : horizontal configuration / right : vertical configuration)
+
+![witmotion pic](/doc/witmotion.png "Wimotion ref x,y,z")
+
+### GoPro Max referencial
+
+Here is the GoPro Max referentiel 
+
+![gopro max pic](/doc/gopromax.png "GoPro Max ref x,y,z")
+
+### Parameters
+
+* --camera_x/y/z : select the IMU axes that are aligned with the camera axes  
+* --camera_roll_axis : select the roll axis of the camera (tilt head side to side, ear toward shoulder)  
+* --camera_pitch_axis : select the pitch axis of the camera (tilt forward/backward, ground to sky)  
+* --camera_yaw_axis : select the yaw axis of the camera (rotation around vertical axis, heading direction)  
+* --pitch/roll/yaw_level_ref : specify an angular offset at which the level should be considered 0  
+
+
