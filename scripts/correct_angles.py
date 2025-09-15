@@ -12,10 +12,20 @@ def sample_and_align_photos(
     photodir,
     photo_ref_name,
     record_index_ref,
+    photo_ref_name_fin,
+    record_index_ref_fin,
     step
 ):
+    
+    #Variable pour choisiur l'interpolation ou l'extrapolation
+    interpol = False
+    if photo_ref_name_fin != "" and record_index_ref_fin != 0 :
+        interpol = True
+        
     # On prend l'enregistrement suivant pour palier à la latence
     record_index_ref = record_index_ref + 1
+    if interpol:
+        record_index_ref_fin = record_index_ref_fin + 1
 
     # 1. Charger le CSV
     df = pd.read_csv(measurements_csv)
@@ -40,6 +50,21 @@ def sample_and_align_photos(
         raise ValueError(f"L'index de référence {record_index_ref} est introuvable dans le fichier CSV.")
 
     time_ref = df.loc[df['index'] == record_index_ref, 'time'].values[0]
+    
+    # Si on souhaite interpoler les données    
+    if interpol:
+        # 3 bis. Trouver l'index de la photo de fin
+        if photo_ref_name_fin not in photo_files:
+            raise ValueError(f"La photo de référence '{photo_ref_name}' est introuvable dans le dossier.")
+        photo_ref_index_fin = photo_files.index(photo_ref_name_fin)
+    
+        # 4 bis. Trouver le temps de référence final
+        if record_index_ref_fin not in df['index'].values:
+            raise ValueError(f"L'index de référence {record_index_ref} est introuvable dans le fichier CSV.")
+    
+        # 4 ter. Calcul du step en cas d'interpolation
+        time_ref_fin = df.loc[df['index'] == record_index_ref_fin, 'time'].values[0]
+        step = (time_ref_fin - time_ref)/(photo_ref_index_fin-photo_ref_index)
 
     # 5. Générer les temps cibles autour de time_ref
     time_min = df['time'].min()
@@ -84,6 +109,8 @@ def main():
     parser.add_argument('--recordfile', '-r', type=str, required=True, help="Path to the WitMotion record file")
     parser.add_argument('--photoref', '-p', type=str, required=True, help="Photo reference")
     parser.add_argument('--indexref', '-i', type=int, required=True, help="Record line number corresponding to photoref")
+    parser.add_argument('--photoref_fin',  type=str, default="" , help="Final photo reference")
+    parser.add_argument('--indexref_fin', type=int, default=0, help="Final record line number corresponding to photoref_fin")
     parser.add_argument('--step', '-s', type=int, default=20, help="Step between records and photos")
     parser.add_argument('--camera_x', '-x', choices=["imux", "-imux", "imuy", "-imuy", "imuz", "-imuz"], default="imux", help="IMU axe on Camera X axe")
     parser.add_argument('--camera_y', '-y', choices=["imux", "-imux", "imuy", "-imuy", "imuz", "-imuz"], default="imuy", help="IMU axe on Camera Y axe")
@@ -103,13 +130,15 @@ def main():
     measurements_csv = args.recordfile
     photo_ref_name = args.photoref
     record_index_ref = args.indexref
+    photo_ref_name_fin = args.photoref_fin
+    record_index_ref_fin = args.indexref_fin
     step = args.step
     camera_roll_axe = args.camera_roll_axe
     camera_pitch_axe = args.camera_pitch_axe
     output_csv = args.outputcsv
     update_images = args.update_images
     
-    results = sample_and_align_photos(measurements_csv,photodir,photo_ref_name,record_index_ref,step)
+    results = sample_and_align_photos(measurements_csv,photodir,photo_ref_name,record_index_ref,photo_ref_name_fin,record_index_ref_fin,step)
     csv = []
     for result in results:
       row = result
