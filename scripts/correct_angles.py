@@ -7,7 +7,6 @@ from img360_transformer.batch_process import process_image
 import numpy as np
 import subprocess
 
-
 def sample_and_align_photos(
     measurements_csv,
     photodir,
@@ -15,9 +14,12 @@ def sample_and_align_photos(
     record_index_ref,
     step
 ):
+    # On prend l'enregistrement suivant pour palier à la latence
+    record_index_ref = record_index_ref + 1
+
     # 1. Charger le CSV
     df = pd.read_csv(measurements_csv)
-    df.columns = ["time", "index", "pitch", "roll", "yaw"]
+    df.columns = ["time", "index", "imux", "imuy", "imuz"]
 
     # 2. Lister les fichiers photo triés alphanumériquement
     photo_files = sorted([
@@ -83,34 +85,52 @@ def main():
     parser.add_argument('--photoref', '-p', type=str, required=True, help="Photo reference")
     parser.add_argument('--indexref', '-i', type=int, required=True, help="Record line number corresponding to photoref")
     parser.add_argument('--step', '-s', type=int, default=20, help="Step between records and photos")
-    parser.add_argument('--pitch_level_ref', type=int, default=0, help="pitch level reference")
-    parser.add_argument('--roll_level_ref', type=int, default=0, help="roll level reference")
-    parser.add_argument('--yaw_level_ref', type=int, default=0, help="yaw level reference")
+    parser.add_argument('--camera_x', '-x', choices=["imux", "-imux", "imuy", "-imuy", "imuz", "-imuz"], default="imux", help="IMU axe on Camera X axe")
+    parser.add_argument('--camera_y', '-y', choices=["imux", "-imux", "imuy", "-imuy", "imuz", "-imuz"], default="imuy", help="IMU axe on Camera Y axe")
+    parser.add_argument('--camera_z', '-z', choices=["imux", "-imux", "imuy", "-imuy", "imuz", "-imuz"], default="imuz", help="IMU axe on Camera Z axe")
+    parser.add_argument('--camera_roll_axe', choices=["camera_x", "camera_y", "camera_z"], default="camera_x", help="Camera roll axe")
+    parser.add_argument('--camera_pitch_axe', choices=["camera_x", "camera_y", "camera_z"], default="camera_y", help="Camera pitch axe")
+    parser.add_argument('--camera_yaw_axe', choices=["camera_x", "camera_y", "camera_z"], default="camera_z", help="Camera yaw axe (currently useless)")
+    parser.add_argument('--pitch_level_ref', type=int, default=0, help="pitch level reference, if not 0")
+    parser.add_argument('--roll_level_ref', type=int, default=0, help="roll level reference, if not 0")
+    parser.add_argument('--yaw_level_ref', type=int, default=0, help="yaw level reference, if not 0")
     parser.add_argument('--outputcsv', type=str, required=True, help="Output CSV file")
     parser.add_argument('--update_images', '-u', choices=["no", "metadatas", "jpeg"], default="no",  help="Update images with angles correction")
 
     args = parser.parse_args()
 
     photodir = args.photodir
+    measurements_csv = args.recordfile
     photo_ref_name = args.photoref
     record_index_ref = args.indexref
     step = args.step
-    measurements_csv = args.recordfile
+    camera_roll_axe = args.camera_roll_axe
+    camera_pitch_axe = args.camera_pitch_axe
     output_csv = args.outputcsv
     update_images = args.update_images
-
+    
     results = sample_and_align_photos(measurements_csv,photodir,photo_ref_name,record_index_ref,step)
     csv = []
     for result in results:
       row = result
-      row["pitch_corrected"] = round(((-result['pitch'] - args.pitch_level_ref + 180) % 360) - 180)
-      row["roll_corrected"] = round(((-result['roll'] - args.roll_level_ref + 180) % 360) - 180)
-      row["yaw_corrected"] = round(((-result['yaw'] - args.yaw_level_ref + 180) % 360) - 180)
-  
-      if update_images == jpeg:
+      get_imu_val = lambda arg: -row[arg[1:]] if arg.startswith("-") else row[arg]
+      camera_axes = {
+       "camera_x": get_imu_val(args.camera_x),
+       "camera_y": get_imu_val(args.camera_y),
+       "camera_z": get_imu_val(args.camera_z),
+      }
+      roll = camera_axes.get(args.camera_roll_axe)
+      pitch = camera_axes.get(args.camera_pitch_axe)
+
+      row["roll_corrected"]  = round(roll  - args.roll_level_ref)
+      row["pitch_corrected"] = round(pitch - args.pitch_level_ref)
+
+      if update_images == "jpeg":
+        row["roll_corrected"] = -row["roll_corrected"];
+        row["pitch_corrected"] = -row["pitch_corrected"];
         print("process image" + photodir + '/' + row['photo'] + "roll:"+str(row["roll_corrected"])+",pitch:"+str(round(row["pitch_corrected"])))
-        process_image(photodir + '/' + row['photo'], round(row["roll_corrected"]), round(row["pitch_corrected"]), 0)
-      elif update_images == metadatas:
+        process_image(photodir + '/' + row['photo'], round(row["pitch_corrected"]), round(row["roll_corrected"]), 0)
+      elif update_images == "metadatas":
         print("update exifs for" + photodir + '/' + row['photo'] + "roll:"+str(row["roll_corrected"])+",pitch:"+str(round(row["pitch_corrected"])))
         subprocess.run([
           "exiftool",
