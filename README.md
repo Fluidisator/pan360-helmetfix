@@ -40,7 +40,9 @@ Press the main **M5** button to cycle through the following screens:
 3. **Wi-Fi Control** – Press the right side button to enable
 4. **Start/Stop Recording** – Press the right side button to toggle
 5. **Filesystem Info** – Press the right side button to format
-6. **Screensaver** – Blank screen to save battery
+6. **NTP information** – Time synchronization status
+7. **Filesystem Info** – Press the right side button to format
+
 
 ---
 
@@ -63,7 +65,10 @@ Press the main **M5** button to cycle through the following screens:
 
 # 🛠️ 360° Image Correction
 
+
 ## Initial Setup
+
+### Only if you want to fix JPG images (--update_images set to jpeg)
 
 1. Clone this repository:
    ```bash
@@ -84,9 +89,9 @@ Press the main **M5** button to cycle through the following screens:
 1. Copy your 360° photos to a local folder.
 
 2. Retrieve the M5Stick CSV data:
-*  Enable Wi-Fi (via Screen 3).
+* Enable Wi-Fi (via Screen 3).
 * Find the IP address on Screen 1.
-*  Open http://<device_ip>/ in your browser to download the CSV file.
+* Open http://<device_ip>/ in your browser to download the CSV file.
 
 3. Identify the image where the recording ID is clearly visible. Keep it memory for the **indexref** parameter, the filename will be the **photoref**
 
