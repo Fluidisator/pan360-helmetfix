@@ -115,7 +115,7 @@ Here is the Witmotion WT9011DCL referencial (left : horizontal configuration / r
 
 Here is the GoPro Max referentiel 
 
-![gopro max pic](/doc/gopromax.png "GoPro Max ref x,y,z")
+![gopro max pic](/doc/gopromax.jpg "GoPro Max ref x,y,z")
 
 ### Parameters
 
