@@ -53,13 +53,15 @@ Press the main **M5** button to cycle through the following screens:
 1. Power on the **M5Stick**.
 2. Power on the **Witmotion sensor**.
 3. Power on your **360° camera**.
-4. Ensure the M5Stick shows pitch, roll, and yaw values.
+4. Ensure the M5Stick shows coherents X, Y, and Z values. If needed calibrate the Witmotion device.
 5. On **Screen 4**, press the right side button to start recording.
 6. Show **Screen 2** (recording ID) in front of the camera for later synchronization.
 
 ![record id pic](/doc/record_id.png "Record ID pic")
 
-7. When done, press the right side button again on **Screen 4** to stop recording.
+7. Proceed to your photo recording trip
+8. At the end, show again **Screen 2** (recording ID) in front of the camera for later synchronization.
+9. When done, press the right side button again on **Screen 4** to stop recording.
 
 ---
 
