@@ -55,7 +55,7 @@ Press the main **M5** button to cycle through the following screens:
 3. Power on your **360° camera**.
 4. Ensure the M5Stick shows coherents X, Y, and Z values. If needed calibrate the Witmotion device.
 5. On **Screen 4**, press the right side button to start recording.
-6. Show **Screen 2** (recording ID) in front of the camera for later synchronization.
+6. Show **Screen 2** (Time record ID) in front of the camera for later synchronization.
 
 ![record id pic](/doc/record_id.png "Record ID pic")
 
@@ -95,7 +95,7 @@ Press the main **M5** button to cycle through the following screens:
 * Find the IP address on Screen 1.
 * Open http://<device_ip>/ in your browser to download the CSV file.
 
-3. Identify the image where the recording ID is clearly visible. Keep it memory for the **indexref** parameter, the filename will be the **photoref**
+3. Identify the image where the recording time ID is clearly visible. Keep it memory for the **timeref** parameter, the filename will be the **photoref**
 
 4. Run the correction script:
    ```bash
@@ -103,7 +103,7 @@ Press the main **M5** button to cycle through the following screens:
      --photodir PATH_TO_PHOTOS \
      --recordfile CSV_FILE_FROM_M5STICK \
      --photoref FILENAME_WITH_ID \
-     --indexref RECORDING_ID \
+     --timeref REF_ID \
      --outputcsv output.csv
      --update_images metadatas
    ```

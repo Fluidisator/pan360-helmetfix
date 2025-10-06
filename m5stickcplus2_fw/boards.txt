@@ -1,0 +1,3 @@
+m5stack_stickc_plus2.menu.PartitionScheme.spiffs8mnoota=Custom SPIFFS 8MB No OTA
+m5stack_stickc_plus2.menu.PartitionScheme.spiffs8mnoota.build.partitions=spiffs_8MB_no_ota
+m5stack_stickc_plus2.menu.PartitionScheme.spiffs8mnoota.upload.maximum_size=3342336
