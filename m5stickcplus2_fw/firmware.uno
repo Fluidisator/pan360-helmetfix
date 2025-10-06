@@ -164,7 +164,7 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
       elapsed = (((now_rtc_ts - start_rtc_ts) * 1000) + ((millis() - sec_floor_ms) % 1000)) / 10;
         Serial.println(elapsed);
         
-      logFile.printf("%lu,%d,%.2f,%.2f,%.2f\n", elapsed, witmotion_x, witmotion_y, witmotion_z);
+      logFile.printf("%lu,%.2f,%.2f,%.2f\n", elapsed, witmotion_x, witmotion_y, witmotion_z);
       if(id % 10 == 0) {
         logFile.flush();
       }
