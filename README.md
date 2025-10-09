@@ -12,11 +12,25 @@ This project helps users who capture 360° photos from a moving setup (e.g., hel
 - [WT9011DCL BT50 IMU Sensor](https://witmotion-sensor.com/products/wt9011dcl-bluetooth5-0-compact-size-accelerometer-inclinometer-sensor)
 - [M5StickC Plus2 ESP32](https://shop.m5stack.com/products/m5stickc-plus2-esp32-mini-iot-development-kit)
 
-## Sensor Mounting
+## Wimotion Sensor 
+
+### Mounting
 
 Mount the Witmotion sensor on your helmet, ideally as close to the 360° camera as possible. The sensor should be aligned on the same axis as the camera.
 
 ![Mounting Example on helmet](/doc/mounting.png "Mounting on helmet")
+
+### Configuration
+
+For this usage you need to download Witmotion App and modify the Return Rate and BandWitdh parameters
+
+They still need to be fined tunned, but by default you can set :
+* Bandwidth to 20Hz
+* Return rate to 50Hz
+
+![Bandwidth](/doc/wm_bandwitdh.jpg "Witmotion Bandwidth")
+![Return Rate](/doc/wm_returnrate.jpg "Witmotion Return Rate")
+
 
 ---
 

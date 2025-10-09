@@ -66,43 +66,60 @@ def sample_and_align_photos(
     times_backward = np.arange(time_ref - step, time_min - step, -step)
     times_target = np.sort(np.concatenate([times_backward, times_forward]))
 
-    # 6. Trouver les times les plus proches dans le CSV
-    df_times = df['time'].values
+    # 6. Gestion de la latence
+    # Trouver, pour chaque time_target, la valeur dans les tolerance_min/max au dessus
+    df_times = np.sort(df['time'].values)
     matched_times = []
     used = set()
+    tolerance_min = 8
+    tolerance_max = 200
 
     for t in times_target:
-        t_nearest = df_times[np.abs(df_times - t).argmin()]
-        if t_nearest not in used:
-            matched_times.append(t_nearest)
-            used.add(t_nearest)
+      # indices où df_times est dans l'intervalle [t + tolerance_min, t + tolerance_max]
+      candidates = df_times[(df_times > t + tolerance_min) & (df_times <= t + tolerance_max)]
+      if len(candidates) > 0:
+        t_match = candidates[0]  # on prend le premier au-dessus dans la fenêtre
+        if t_match not in used:
+          matched_times.append(t_match)
+          used.add(t_match)
+        else:
+            matched_times.append(None)
+      else:
+        matched_times.append(None)
 
     # 7. Extraire les lignes correspondantes
-    df_result = df[df['time'].isin(matched_times)].copy().sort_values('time').reset_index(drop=True)
-    #for idx, row in df_result.iterrows():
-    #  row_idx = df.index[df.iloc[:,0] == row[0]].tolist()[0] - 1
-    #  if row_idx in df.index:
-    #    x1 = df.iloc[row_idx][2]
-    #    y1 = df.iloc[row_idx][3]
-    #    z1 = df.iloc[row_idx][4]
-    #    df_result.iloc[idx, 2] = (df_result.iloc[idx, 2] + x1) / 2
-    #    df_result.iloc[idx, 3] = (df_result.iloc[idx, 3] + y1) / 2
-    #    df_result.iloc[idx, 4] = (df_result.iloc[idx, 4] + z1) / 2
+    rows = []
+    for t_match in matched_times:
+      if t_match is not None:
+        row = df.loc[df['time'] == t_match].iloc[0].copy()
+      else:
+        # ligne vide (toutes colonnes NaN)
+        row = pd.Series({col: 0 for col in df.columns})
+      rows.append(row)
 
-    row_index_number = df_result.index[df_result["time"] == record_time_ref].tolist()[0]
-    photo_index_number = photo_files.index(photo_ref_name) 
+      df_result = pd.DataFrame(rows).reset_index(drop=True)
+
+    # 8. Trouver la ligne de time_ref (plus proche si nécessaire)
+    if not df_result.empty:
+      idx_nearest = (df_result["time"] - time_ref).abs().argmin()
+      row_index_number = df_result.index[idx_nearest]
+    else:
+      row_index_number = None
+      print("df_result est vide, aucune correspondance trouvée.")
+
+    photo_index_number = photo_files.index(photo_ref_name)
     first_row = row_index_number - photo_index_number
     df_with_photos = []
     j = 0
+
     for i in range(first_row, len(df_result)):
-      if j < len(photo_files) - 1:  
+      if j < len(photo_files):  
         row = df_result.iloc[i].copy()  
         row['photo'] = photo_files[j]
         df_with_photos.append(row)
         j = j+1
 
     return df_with_photos
-
 
 def main():
     parser = argparse.ArgumentParser(description="Horizon correcter")
