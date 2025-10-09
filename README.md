@@ -22,9 +22,9 @@ Mount the Witmotion sensor on your helmet, ideally as close to the 360° camera 
 
 ### Configuration
 
-For this usage you need to download Witmotion App and modify the Return Rate and BandWitdh parameters
+For this setup, you need to download the Witmotion App and adjust the Return Rate and Bandwidth parameters.
 
-They still need to be fined tunned, but by default you can set :
+These settings may still require fine-tuning, but by default, you can use:
 * Bandwidth to 20Hz
 * Return rate to 50Hz
 
