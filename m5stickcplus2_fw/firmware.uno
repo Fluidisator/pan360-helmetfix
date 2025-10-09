@@ -152,7 +152,6 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
     witmotion_x = rollRaw / 32768.0 * 180.0;
     witmotion_y = pitchRaw / 32768.0 * 180.0;
     witmotion_z = yawRaw / 32768.0 * 180.0;
-    Serial.println(witmotion_x);
     now_rtc_ts = rtcNow();
     if(now_rtc_ts != last_rtc_ts) {
       sec_floor_ms = millis();
@@ -161,8 +160,6 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
     if(recordstarted) {
       id++;
       elapsed = (((now_rtc_ts - start_rtc_ts) * 1000) + (millis() - sec_floor_ms)) / 10 ;
-      Serial.println(elapsed);
-        
       logFile.printf("%lu,%.2f,%.2f,%.2f\n", elapsed, witmotion_x, witmotion_y, witmotion_z);
       if(id % 10 == 0) {
         logFile.flush();
