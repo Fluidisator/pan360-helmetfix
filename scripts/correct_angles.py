@@ -176,10 +176,10 @@ def main():
       if update_images == "jpeg":
         row["roll_corrected"] = -row["roll_corrected"];
         row["pitch_corrected"] = -row["pitch_corrected"];
-        print("process image" + photodir + '/' + row['photo'] + "roll:"+str(row["roll_corrected"])+",pitch:"+str(round(row["pitch_corrected"])))
+        print("process image" + photodir + '/' + row['photo'] + "roll:"+str(round(row["roll_corrected"]))+",pitch:"+str(round(row["pitch_corrected"])))
         process_image(photodir + '/' + row['photo'], round(row["pitch_corrected"]), round(row["roll_corrected"]), 0)
       elif update_images == "metadatas":
-        print("update exifs for" + photodir + '/' + row['photo'] + " roll:"+str(row["roll_corrected"])+",pitch:"+str(round(row["pitch_corrected"])))
+        print("update exifs for" + photodir + '/' + row['photo'] + " roll:"+str(row["roll_corrected"])+",pitch:"+str(row["pitch_corrected"]))
         subprocess.run([
           "exiftool",
           "-overwrite_original",
