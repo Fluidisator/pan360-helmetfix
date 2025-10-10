@@ -51,7 +51,7 @@ Press the main **M5** button to cycle through the following screens:
 
 1. **Device Status** – Sensor and Wi-Fi information
 2. **Recording ID** – Displayed when recording is active
-3. **Wi-Fi Control** – Press the right side button to enable
+3. **Wi-Fi Control** – Press the right side button to enable / hold the right side button during one second for using the second wifi configuration
 4. **Start/Stop Recording** – Press the right side button to toggle
 5. **Filesystem Info** – Press the right side button to format
 6. **NTP information** – Time synchronization status

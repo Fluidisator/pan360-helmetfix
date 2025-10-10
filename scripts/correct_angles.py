@@ -65,7 +65,6 @@ def sample_and_align_photos(
     times_forward = np.arange(time_ref, time_max + step, step)
     times_backward = np.arange(time_ref - step, time_min - step, -step)
     times_target = np.sort(np.concatenate([times_backward, times_forward]))
-
     # 6. Gestion de la latence
     # Trouver, pour chaque time_target, la valeur dans les tolerance_min/max au dessus
     df_times = np.sort(df['time'].values)
@@ -113,12 +112,12 @@ def sample_and_align_photos(
     j = 0
 
     for i in range(first_row, len(df_result)):
-      if j < len(photo_files):  
-        row = df_result.iloc[i].copy()  
-        row['photo'] = photo_files[j]
-        df_with_photos.append(row)
+      if j < len(photo_files):
+        if i > 0:  
+          row = df_result.iloc[i].copy()  
+          row['photo'] = photo_files[j]
+          df_with_photos.append(row)
         j = j+1
-
     return df_with_photos
 
 def main():
