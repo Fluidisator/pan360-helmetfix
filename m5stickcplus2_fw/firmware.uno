@@ -53,10 +53,14 @@ char filename[21];
 WebServer server(80);
 
 File logFile;
-unsigned long timems;
-unsigned long lastRecord = millis();
 unsigned long lastWifiAttempt = millis();
 unsigned long lastBLEAttempt = millis();
+unsigned long sec_floor_ms = millis();
+time_t start_rtc_ts = 0;
+time_t now_rtc_ts = 0;
+time_t last_rtc_ts = 0;
+int elapsed = 0;
+
 
 //NTP config
 //From M5StickC plus 2 RTC example
@@ -79,6 +83,24 @@ unsigned long lastBLEAttempt = millis();
 #define SNTP_ENABLED 0
 #endif
 
+
+// Convertit la date RTC en timestamp UNIX
+time_t rtcNow() {
+  auto dt = StickCP2.Rtc.getDateTime();
+  
+  struct tm t;
+  t.tm_year = dt.date.year - 1900; // année depuis 1900 (base = 2000)
+  t.tm_mon  = dt.date.month - 1;   // mois 0-11
+  t.tm_mday = dt.date.date;              // jour
+  t.tm_hour = dt.time.hours;
+  t.tm_min  = dt.time.minutes;
+  t.tm_sec  = dt.time.seconds;          // secondes par pas de 2
+
+  return mktime(&t); // timestamp UNIX
+}
+
+
+                            
 void handleRoot() {
   String html = "<h1>Fichiers SPIFFS</h1><ul>";
 
@@ -130,6 +152,21 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
     witmotion_x = rollRaw / 32768.0 * 180.0;
     witmotion_y = pitchRaw / 32768.0 * 180.0;
     witmotion_z = yawRaw / 32768.0 * 180.0;
+    now_rtc_ts = rtcNow();
+    if(now_rtc_ts != last_rtc_ts) {
+      sec_floor_ms = millis();
+      last_rtc_ts = now_rtc_ts;
+    }
+    if(recordstarted) {
+      id++;
+      elapsed = (((now_rtc_ts - start_rtc_ts) * 1000) + (millis() - sec_floor_ms)) / 10 ;
+      logFile.printf("%lu,%.2f,%.2f,%.2f\n", elapsed, witmotion_x, witmotion_y, witmotion_z);
+      if(id % 10 == 0) {
+        logFile.flush();
+      }
+    }
+    
+
   }
 }
 
@@ -298,11 +335,11 @@ void setup() {
     }
   }
   Serial.println("RTC found.");
-  
+
+  start_rtc_ts = rtcNow();
 }  // End of setup.
 
 void loop() {
-  timems = millis() / 100;
   
   auto dt = StickCP2.Rtc.getDateTime();
 
@@ -331,8 +368,7 @@ void loop() {
     M5.Lcd.setTextSize(2);
     M5.Lcd.setTextDatum(TL_DATUM);  // coin haut gauche
     M5.Lcd.setTextColor(WHITE, BLACK);  // fond noir, efface proprement
-    M5.Lcd.drawString("ID: " + String(id), x, y); y += lineHeight;
-    M5.Lcd.drawString("T: " + String(timems) + "ms", x, y); y += lineHeight;
+    M5.Lcd.drawString("T: " + String(elapsed) + "ms", x, y); y += lineHeight;
     M5.Lcd.drawString("X: " + String(witmotion_x, 1) + "     ", x, y); y += lineHeight;
     M5.Lcd.drawString("Y: " + String(witmotion_y, 1) + "     ",x, y); y += lineHeight;
     M5.Lcd.drawString("Z: " + String(witmotion_z, 1) + "     ", x, y); y += lineHeight;
@@ -342,13 +378,16 @@ void loop() {
   else if(screen == 2) {
     M5.Lcd.setCursor(10, 10);
     M5.Lcd.setTextColor(WHITE, BLACK);
-    if(id < 1000) {
+    if(elapsed < 1000) {
       M5.Lcd.setTextSize(10);
     }
-    else {
+    else if(elapsed < 10000) {
       M5.Lcd.setTextSize(8);
     }
-    M5.Lcd.println(id);
+    else {
+      M5.Lcd.setTextSize(7);
+    }
+    M5.Lcd.println(elapsed);
   }
   else if(screen == 3) {
     M5.Lcd.setTextSize(8);
@@ -413,8 +452,8 @@ void loop() {
     if (StickCP2.BtnB.wasReleased()) {
       if(!recordstarted) {
         //String code = generateRandomCode();  // ex: "12-34-56-78"
-  sprintf(NumDate, "%04d%02d%02dT%02d%02d%02d",  dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds);
-  String code = NumDate;
+        sprintf(NumDate, "%04d%02d%02dT%02d%02d%02d",  dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds);
+        String code = NumDate;
         snprintf(filename, sizeof(filename), "/%s.csv", code.c_str());
 
         Serial.printf("Fichier : %s\n", filename);
@@ -423,6 +462,7 @@ void loop() {
           Serial.println("Erreur ouverture fichier");
           return;
         }
+        start_rtc_ts = rtcNow();
         recordstarted = true;
         id = 0;
       }
@@ -442,20 +482,20 @@ void loop() {
   }
   else if(screen == 5) {
     M5.Lcd.setCursor(10, 10);
-    M5.Lcd.setTextSize(1);
+    M5.Lcd.setTextSize(2);
     M5.Lcd.setTextColor(WHITE, BLACK);
     size_t total = SPIFFS.totalBytes();
     size_t used  = SPIFFS.usedBytes(); 
     M5.Lcd.println("== Info SPIFFS ==");
     M5.Lcd.print("Total : ");  
     M5.Lcd.print(total);
-    M5.Lcd.println(" octets      ");
+    M5.Lcd.println("o  ");
     M5.Lcd.print("Used : ");
     M5.Lcd.print(used);
-    M5.Lcd.println(" octets     ");
+    M5.Lcd.println("o     ");
     M5.Lcd.print("Free : ");
     M5.Lcd.print(total - used);
-    M5.Lcd.println(" octets      ");
+    M5.Lcd.println("o      ");
     if (StickCP2.BtnB.wasReleased()) {
       Serial.println("Formatting SPIFFS...");
       M5.Lcd.println("Formatting SPIFFS...");
@@ -523,17 +563,7 @@ void loop() {
     doScan = false;
   }
 
-  if(recordstarted) {
-    if(millis() - lastRecord >= 100) {
-      id++;
-      lastRecord = millis();
-      logFile.printf("%lu,%d,%.2f,%.2f,%.2f\n", timems, id, witmotion_x, witmotion_y, witmotion_z);
-      if(id % 10 == 0) {
-        logFile.flush();
-      }
-    }
-    
-  }
+
 
   if(wifienable && wifienabled == 0) {
     wifienabled = 1;     
@@ -574,4 +604,4 @@ void loop() {
   else if(wifienabled == 2) {
     server.handleClient();
   }
-}  
+}    
