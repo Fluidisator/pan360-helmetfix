@@ -108,6 +108,9 @@ Press the main **M5** button to cycle through the following screens:
 * Enable Wi-Fi (via Screen 3).
 * Find the IP address on Screen 1.
 * Open http://<device_ip>/ in your browser to download the CSV file.
+  The csv names are time and date at the begining of the sequence, followed by a number :
+  YYYYMMMDDThhmmss-000.csv
+* Copy all the csv created during the sequence to the same directory as photos
 
 3. Identify the image where the recording time ID is clearly visible. Keep it memory for the **timeref** parameter, the filename will be the **photoref**
 
@@ -115,7 +118,7 @@ Press the main **M5** button to cycle through the following screens:
    ```bash
    ./correct_angles.py \
      --photodir PATH_TO_PHOTOS \
-     --recordfile CSV_FILE_FROM_M5STICK \
+     --recordfile FIRST_PART_OF_CSV_NAMES \
      --photoref FILENAME_WITH_ID \
      --timeref REF_ID \
      --outputcsv output.csv
@@ -142,8 +145,8 @@ Here is the GoPro Max referentiel
 
 * --camera_x/y/z : select the IMU axes that are aligned with the camera axes  
 * --camera_roll_axis : select the roll axis of the camera (tilt head side to side, ear toward shoulder)  
-* --camera_pitch_axis : select the pitch axis of the camera (tilt forward/backward, ground to sky)  
+* --camera_pitch_axis : select the pitch axis of the camera (tilt forward/backward, ground to sky)
 * --camera_yaw_axis : select the yaw axis of the camera (rotation around vertical axis, heading direction)  
-* --pitch/roll/yaw_level_ref : specify an angular offset at which the level should be considered 0  
-
+* --pitch/roll/yaw_level_ref : specify an angular offset at which the level should be considered 0 
+* --recordfiledir : specify the csv file directory if it's not the same
 
