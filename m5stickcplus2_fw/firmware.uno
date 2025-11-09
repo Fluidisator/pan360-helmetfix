@@ -60,7 +60,7 @@ time_t start_rtc_ts = 0;
 time_t now_rtc_ts = 0;
 time_t last_rtc_ts = 0;
 int elapsed = 0;
-int MaxRow = 200;
+int MaxRow = 10000;
 int Suffix = 0;
 char NumDate [21];
 char NumSuffix [3];
