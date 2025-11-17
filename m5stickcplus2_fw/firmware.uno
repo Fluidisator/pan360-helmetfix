@@ -48,7 +48,7 @@ int id = 0;
 float witmotion_x = 0;
 float witmotion_y = 0;
 float witmotion_z = 0;
-char filename[21];
+char filename[25];
 
 WebServer server(80);
 
@@ -60,7 +60,11 @@ time_t start_rtc_ts = 0;
 time_t now_rtc_ts = 0;
 time_t last_rtc_ts = 0;
 int elapsed = 0;
-
+int MaxRow = 10000;
+int Suffix = 0;
+char NumDate [21];
+char NumSuffix [3];
+String PrefixFile = "";
 
 //NTP config
 //From M5StickC plus 2 RTC example
@@ -99,8 +103,6 @@ time_t rtcNow() {
   return mktime(&t); // timestamp UNIX
 }
 
-
-                            
 void handleRoot() {
   String html = "<h1>Fichiers SPIFFS</h1><ul>";
 
@@ -164,9 +166,12 @@ static void notifyCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, ui
       if(id % 10 == 0) {
         logFile.flush();
       }
-    }
-    
-
+      if(id>MaxRow){
+		    logFile.close();
+		    Suffix++;
+		    createlogfile();
+      }
+	  }
   }
 }
 
@@ -273,23 +278,40 @@ void SyncNTP(){
   configTzTime(NTP_TIMEZONE, NTP_SERVER1, NTP_SERVER2, NTP_SERVER3);
 
 #if SNTP_ENABLED
-    while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED) {
-        Serial.print('.');
-        delay(1000);
-    }
+  while (sntp_get_sync_status() != SNTP_SYNC_STATUS_COMPLETED) {
+    Serial.print('.');
+    delay(1000);
+  }
 #else
-    delay(1600);
-    struct tm timeInfo;
-    while (!getLocalTime(&timeInfo, 1000)) {
-        Serial.print('.');
-    };
+  delay(1600);
+  struct tm timeInfo;
+  while (!getLocalTime(&timeInfo, 1000)) {
+    Serial.print('.');
+  };
 #endif
 
-    Serial.println("\r\n NTP Connected.");
+  Serial.println("\r\n NTP Connected.");
 
-    time_t t = time(nullptr) + 1;  // Advance one second.
-    while (t > time(nullptr));  /// Synchronization in seconds
-    StickCP2.Rtc.setDateTime(gmtime(&t));
+  time_t t = time(nullptr) + 1;  // Advance one second.
+  while (t > time(nullptr));  /// Synchronization in seconds
+  StickCP2.Rtc.setDateTime(gmtime(&t));
+}
+
+void createlogfile(){
+  //Create the log the file and name it after the datetime of start and the number in case of multiple fil
+  String code="";
+  sprintf(NumSuffix,"%03d",Suffix);
+  Serial.print(PrefixFile);
+  String NumFile = NumSuffix;
+  code = PrefixFile + NumFile;
+  snprintf(filename, sizeof(filename), "/%s.csv", code.c_str());
+  Serial.printf("Fichier : %s\n", filename);
+  logFile = SPIFFS.open(filename, FILE_WRITE);
+  if (!logFile) {
+    Serial.println("Erreur ouverture fichier");
+	return;
+  }
+  id = 0;
 }
 
 void setup() {
@@ -451,20 +473,11 @@ void loop() {
     
     if (StickCP2.BtnB.wasReleased()) {
       if(!recordstarted) {
-        //String code = generateRandomCode();  // ex: "12-34-56-78"
-        sprintf(NumDate, "%04d%02d%02dT%02d%02d%02d",  dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds);
-        String code = NumDate;
-        snprintf(filename, sizeof(filename), "/%s.csv", code.c_str());
-
-        Serial.printf("Fichier : %s\n", filename);
-        logFile = SPIFFS.open(filename, FILE_WRITE);
-        if (!logFile) {
-          Serial.println("Erreur ouverture fichier");
-          return;
-        }
+        sprintf(NumDate, "%04d%02d%02dT%02d%02d%02d-",  dt.date.year, dt.date.month, dt.date.date, dt.time.hours, dt.time.minutes,dt.time.seconds);
+        PrefixFile = NumDate;
+		    createlogfile();
         start_rtc_ts = rtcNow();
         recordstarted = true;
-        id = 0;
       }
       else {
         logFile.flush();
@@ -562,8 +575,6 @@ void loop() {
     lastBLEAttempt = millis();
     doScan = false;
   }
-
-
 
   if(wifienable && wifienabled == 0) {
     wifienabled = 1;     

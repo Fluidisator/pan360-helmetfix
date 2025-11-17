@@ -3,11 +3,13 @@
 import os
 import pandas as pd
 import argparse
+import glob
 from img360_transformer.batch_process import process_image
 import numpy as np
 import subprocess
 
 def sample_and_align_photos(
+    csv_dir,
     measurements_csv,
     photodir,
     photo_ref_name,
@@ -21,9 +23,15 @@ def sample_and_align_photos(
     if photo_ref_name_fin != "" and record_time_ref_fin != 0 :
       interpol = True
 
-    # 1. Charger le CSV
-    df = pd.read_csv(measurements_csv, header=None)
+    # 1. Charger les CSV
+    df=pd.DataFrame()
+    path_to_list = glob.glob(csv_dir + '/' +  measurements_csv + '*.csv' )
+    for path_to_file in path_to_list:
+        df2 = pd.read_csv(path_to_file, header=None)
+        df=pd.concat([df,df2], ignore_index=True)
     df.columns = ["time", "imux", "imuy", "imuz"]
+    df.sort_values(by=['time'])
+    
     # 2. Lister les fichiers photo triés alphanumériquement
     photo_files = sorted([
         f for f in os.listdir(photodir)
@@ -124,7 +132,8 @@ def main():
     parser = argparse.ArgumentParser(description="Horizon correcter")
 
     parser.add_argument('--photodir', '-d', type=str, required=True, help="Path to the photos directory")
-    parser.add_argument('--recordfile', '-r', type=str, required=True, help="Path to the WitMotion record file")
+    parser.add_argument('--recordfile', '-r', type=str, required=True, help="Common part of csv files")
+    parser.add_argument('--recordfiledir', type=str, default="", help="Path to the csv files directory, set to photo directory if not specified")
     parser.add_argument('--photoref', '-p', type=str, required=True, help="Photo reference")
     parser.add_argument('--timeref', '-i', type=int, required=True, help="Time reference number corresponding to photoref")
     parser.add_argument('--photoref_fin',  type=str, default="" , help="Final photo reference")
@@ -145,7 +154,10 @@ def main():
     args = parser.parse_args()
 
     photodir = args.photodir
-    measurements_csv = args.recordfile
+    csv_dir = args.recordfiledir
+    if csv_dir == "":
+        csv_dir = photodir
+    measurment_csv = args.recordfile
     photo_ref_name = args.photoref
     record_time_ref = args.timeref
     photo_ref_name_fin = args.photoref_fin
@@ -156,7 +168,7 @@ def main():
     output_csv = args.outputcsv
     update_images = args.update_images
     
-    results = sample_and_align_photos(measurements_csv,photodir,photo_ref_name,record_time_ref,photo_ref_name_fin,record_time_ref_fin,step)
+    results = sample_and_align_photos(csv_dir,measurment_csv,photodir,photo_ref_name,record_time_ref,photo_ref_name_fin,record_time_ref_fin,step)
     csv = []
     for result in results:
       row = result
