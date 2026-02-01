@@ -149,4 +149,5 @@ Here is the GoPro Max referentiel
 * --camera_yaw_axis : select the yaw axis of the camera (rotation around vertical axis, heading direction)  
 * --pitch/roll/yaw_level_ref : specify an angular offset at which the level should be considered 0 
 * --recordfiledir : specify the csv file directory if it's not the same
+* --yaw_correction : "no", "metadatas", "jpeg", specify to do nothong, write heading value in the exif or to correct the yaw with the jpeg.
 
