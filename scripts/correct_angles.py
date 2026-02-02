@@ -144,12 +144,13 @@ def main():
     parser.add_argument('--camera_z', '-z', choices=["imux", "-imux", "imuy", "-imuy", "imuz", "-imuz"], default="imuz", help="IMU axe on Camera Z axe")
     parser.add_argument('--camera_roll_axe', choices=["camera_x", "camera_y", "camera_z"], default="camera_x", help="Camera roll axe")
     parser.add_argument('--camera_pitch_axe', choices=["camera_x", "camera_y", "camera_z"], default="camera_y", help="Camera pitch axe")
-    parser.add_argument('--camera_yaw_axe', choices=["camera_x", "camera_y", "camera_z"], default="camera_z", help="Camera yaw axe (currently useless)")
+    parser.add_argument('--camera_yaw_axe', choices=["camera_x", "camera_y", "camera_z"], default="camera_z", help="Camera yaw axe")
     parser.add_argument('--pitch_level_ref', type=int, default=0, help="pitch level reference, if not 0")
     parser.add_argument('--roll_level_ref', type=int, default=0, help="roll level reference, if not 0")
     parser.add_argument('--yaw_level_ref', type=int, default=0, help="yaw level reference, if not 0")
     parser.add_argument('--outputcsv', type=str, required=True, help="Output CSV file")
     parser.add_argument('--update_images', '-u', choices=["no", "metadatas", "jpeg"], default="no",  help="Update images with angles correction")
+    parser.add_argument('--yaw_correction', choices=["no", "metadatas", "jpeg"], default="no",  help="Yes to apply yaw correction, default is no")
 
     args = parser.parse_args()
 
@@ -165,8 +166,10 @@ def main():
     step = args.step
     camera_roll_axe = args.camera_roll_axe
     camera_pitch_axe = args.camera_pitch_axe
+    camera_yaw_axe = args.camera_yaw_axe
     output_csv = args.outputcsv
     update_images = args.update_images
+    yaw_correction = args.yaw_correction
     
     results = sample_and_align_photos(csv_dir,measurment_csv,photodir,photo_ref_name,record_time_ref,photo_ref_name_fin,record_time_ref_fin,step)
     csv = []
@@ -180,22 +183,41 @@ def main():
       }
       roll = camera_axes.get(args.camera_roll_axe)
       pitch = camera_axes.get(args.camera_pitch_axe)
+      yaw = camera_axes.get(args.camera_yaw_axe)
 
       row["roll_corrected"]  = round(roll  - args.roll_level_ref,2)
       row["pitch_corrected"] = round(pitch - args.pitch_level_ref,2)
+      # Don't correct Yaw, chose to correct metadatas or not
+      if yaw_correction == "no":
+        row["yaw_corrected"] = 0 - args.yaw_level_ref
+      elif yaw_correction == "metadatas":
+        row["yaw_corrected"] = 0 - args.yaw_level_ref
+        row["yaw_corrected_metadatas"] = round(yaw - args.yaw_level_ref,2)%360
+      else:
+        row["yaw_corrected"] = round(yaw - args.yaw_level_ref,2)
 
       if update_images == "jpeg":
         row["roll_corrected"] = -row["roll_corrected"];
         row["pitch_corrected"] = -row["pitch_corrected"];
-        print("process image" + photodir + '/' + row['photo'] + "roll:"+str(round(row["roll_corrected"]))+",pitch:"+str(round(row["pitch_corrected"])))
-        process_image(photodir + '/' + row['photo'], round(row["pitch_corrected"]), round(row["roll_corrected"]), 0)
+        row["yaw_corrected"] = -row["yaw_corrected"];
+        print("process image " + photodir + '/' + row['photo'] + " roll:"+str(round(row["roll_corrected"],1))+",pitch:"+str(round(row["pitch_corrected"],1))+",yaw:"+str(round(row["yaw_corrected"],1)))
+        process_image(photodir + '/' + row['photo'], round(row["pitch_corrected"],1),round(row["yaw_corrected"],1),round(row["roll_corrected"],1))
       elif update_images == "metadatas":
-        print("update exifs for" + photodir + '/' + row['photo'] + " roll:"+str(row["roll_corrected"])+",pitch:"+str(row["pitch_corrected"]))
+        print("update exifs for " + photodir + '/' + row['photo'] + " roll:"+str(row["roll_corrected"])+",pitch:"+str(row["pitch_corrected"]))
         subprocess.run([
           "exiftool",
           "-overwrite_original",
           f"-XMP-GPano:PosePitchDegrees={row['pitch_corrected']}",
           f"-XMP-GPano:PoseRollDegrees={row['roll_corrected']}",
+          photodir + '/' + row['photo']
+        ], check=True)
+      if yaw_correction == "metadatas":
+        print("update exifs for " + photodir + '/' + row['photo'] + ",yaw:"+str(row["yaw_corrected_metadatas"]))
+        subprocess.run([
+          "exiftool",
+          "-overwrite_original",
+          f"-GPSImgDirectionRef=M",
+          f"-GPSImgDirection={row['yaw_corrected_metadatas']}",
           photodir + '/' + row['photo']
         ], check=True) 
 
